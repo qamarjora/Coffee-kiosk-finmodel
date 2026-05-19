@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Финансовая модель — Кофейный островок</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0f0f0f;
+    --gray-900: #1a1a1a;
+    --gray-600: #6b6b6b;
+    --gray-400: #a0a0a0;
+    --gray-200: #e8e8e8;
+    --gray-100: #f4f4f4;
+    --gray-50: #fafafa;
+    --white: #ffffff;
+    --accent: #0f0f0f;
+    --green: #2d6a4f;
+    --red: #9b2226;
+    --amber: #9c6400;
+    --font-sans: 'DM Mono', monospace;
+    --font-serif: 'Instrument Serif', serif;
+    --radius: 2px;
+    --radius-lg: 4px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--white);
+    color: var(--black);
+    font-size: 13px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  .site-header {
+    border-bottom: 1px solid var(--gray-200);
+    padding: 20px 24px;
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .site-header h1 {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--black);
+    white-space: nowrap;
+  }
+  .header-meta {
+    font-size: 11px;
+    color: var(--gray-400);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* NAV */
+  .nav {
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-item {
+    padding: 12px 16px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: var(--font-sans);
+  }
+  .nav-item:hover { color: var(--black); }
+  .nav-item.active {
+    color: var(--black);
+    border-bottom-color: var(--black);
+  }
+
+  /* LAYOUT */
+  .main { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-header { margin-bottom: 32px; }
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    margin-bottom: 6px;
+  }
+  .section-title {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--black);
+    line-height: 1.2;
+  }
+
+  /* GROUP */
+  .group { margin-bottom: 40px; }
+  .group-title {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-200);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* TABLE ROWS */
+  .fm-table { width: 100%; border-collapse: collapse; }
+  .fm-table tr { border-bottom: 1px solid var(--gray-200); }
+  .fm-table tr:last-child { border-bottom: none; }
+  .fm-table td { padding: 10px 0; vertical-align: middle; }
+  .fm-table td:first-child { color: var(--gray-600); font-size: 13px; width: 100%; }
+  .fm-table td.input-cell { white-space: nowrap; padding-left: 12px; }
+  .fm-table td.unit-cell { color: var(--gray-400); font-size: 11px; padding-left: 8px; white-space: nowrap; }
+
+  .fm-input {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--black);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    width: 120px;
+    text-align: right;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .fm-input:focus {
+    outline: none;
+    border-color: var(--black);
+    background: var(--white);
+  }
+  .fm-input::placeholder { color: var(--gray-400); }
+
+  @media (max-width: 480px) {
+    .fm-input { width: 90px; font-size: 12px; }
+  }
+
+  /* ADD ROW */
+  .add-row-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--gray-400);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px 0;
+    transition: color 0.15s;
+  }
+  .add-row-btn:hover { color: var(--black); }
+  .add-row-btn .plus { font-size: 16px; line-height: 1; }
+
+  /* TOTAL ROW */
+  .total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-top: 1px solid var(--black);
+    margin-top: 4px;
+  }
+  .total-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-600); }
+  .total-value { font-size: 20px; font-weight: 500; color: var(--black); }
+
+  /* METRICS GRID */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--gray-200); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 32px; }
+  .metric { background: var(--white); padding: 20px 18px; }
+  .metric-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 8px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: var(--black); line-height: 1.1; }
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+  .metric-value.amber { color: var(--amber); }
+  .metric-sub { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+
+  /* CHART */
+  .chart-container { border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 32px; }
+  .chart-title { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 16px; }
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* SCENARIO LEGEND */
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--gray-600); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* P&L TABLE */
+  .pl-table-wrap { overflow-x: auto; margin-bottom: 32px; }
+  .pl-table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
+  .pl-table th {
+    text-align: right;
+    padding: 8px 10px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    border-bottom: 1px solid var(--gray-200);
+    white-space: nowrap;
+  }
+  .pl-table th:first-child { text-align: left; }
+  .pl-table td { padding: 9px 10px; border-bottom: 1px solid var(--gray-200); white-space: nowrap; text-align: right; }
+  .pl-table td:first-child { text-align: left; color: var(--gray-600); }
+  .pl-table tr.pl-total td { font-weight: 500; color: var(--black); }
+  .pl-table tr.pl-profit td:not(:first-child) { color: var(--green); font-weight: 500; }
+  .pl-table tr.pl-loss td:not(:first-child) { color: var(--red); font-weight: 500; }
+  .pl-table tr.pl-divider td { border-top: 1px solid var(--black); }
+  .pl-table tr.pl-section td { color: var(--gray-400); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding-top: 16px; border-bottom: none; }
+
+  /* UNIT ECON */
+  .unit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  @media (max-width: 560px) { .unit-grid { grid-template-columns: 1fr; } }
+
+  .unit-card { border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; }
+  .unit-card-title { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 16px; }
+
+  /* RAMP TABLE (раскатка) */
+  .ramp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .ramp-table th { text-align: left; padding: 6px 0; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); border-bottom: 1px solid var(--gray-200); }
+  .ramp-table td { padding: 8px 0; border-bottom: 1px solid var(--gray-200); color: var(--gray-600); }
+  .ramp-table td input[type=range] { width: 100%; accent-color: var(--black); }
+  .ramp-table td.ramp-val { text-align: right; font-weight: 500; color: var(--black); width: 50px; }
+
+  /* NOTES */
+  .note { font-size: 11px; color: var(--gray-400); margin-top: 6px; font-style: italic; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--gray-200); margin: 32px 0; }
+
+  /* DELETE BTN */
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray-400);
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 0 0 10px;
+    transition: color 0.15s;
+  }
+  .del-btn:hover { color: var(--red); }
+
+  /* EDITABLE label */
+  .editable-label {
+    background: none;
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--gray-600);
+    width: 100%;
+    cursor: text;
+    padding: 0;
+  }
+  .editable-label:focus { outline: none; color: var(--black); }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .site-header { padding: 14px 16px; }
+    .site-header h1 { font-size: 15px; }
+    .main { padding: 20px 16px 60px; }
+    .section-title { font-size: 22px; }
+    .nav { padding: 0 16px; }
+    .nav-item { padding: 10px 12px; font-size: 10px; }
+    .metric-value { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>Финансовая модель</h1>
+  <span class="header-meta">Кофейный островок</span>
+</header>
+
+<nav class="nav">
+  <button class="nav-item active" onclick="switchTab('invest')">01 · Инвестиции</button>
+  <button class="nav-item" onclick="switchTab('unit')">02 · Unit-экономика</button>
+  <button class="nav-item" onclick="switchTab('ops')">03 · Операционка</button>
+  <button class="nav-item" onclick="switchTab('ramp')">04 · Раскатка</button>
+  <button class="nav-item" onclick="switchTab('pl')">05 · P&L / Итог</button>
+</nav>
+
+<main class="main">
+
+  <!-- ===== 01 ИНВЕСТИЦИИ ===== -->
+  <div id="tab-invest" class="section active">
+    <div class="section-header">
+      <div class="section-label">Раздел 01</div>
+      <div class="section-title">Стартовые инвестиции</div>
+    </div>
+
+    <!-- Оборудование -->
+    <div class="group">
+      <div class="group-title">
+        <span>Оборудование</span>
+      </div>
+      <table class="fm-table" id="tbl-equip">
+        <tbody>
+          <tr data-group="equip">
+            <td><input class="editable-label" type="text" value="Эспрессо-машина (1–2 группы)"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="equip">
+            <td><input class="editable-label" type="text" value="Кофегриндер"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="equip">
+            <td><input class="editable-label" type="text" value="Холодильник витринный"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="equip">
+            <td><input class="editable-label" type="text" value="Льдогенератор"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="equip">
+            <td><input class="editable-label" type="text" value="Блендер"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="equip">
+            <td><input class="editable-label" type="text" value="Фильтрационная система"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-row-btn" onclick="addRow('tbl-equip','equip')"><span class="plus">+</span> добавить позицию</button>
+    </div>
+
+    <!-- Стойка и брендинг -->
+    <div class="group">
+      <div class="group-title"><span>Стойка и брендинг</span></div>
+      <table class="fm-table" id="tbl-brand">
+        <tbody>
+          <tr data-group="brand">
+            <td><input class="editable-label" type="text" value="Стойка-островок (изготовление)"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="brand">
+            <td><input class="editable-label" type="text" value="Вывеска / брендинг"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="brand">
+            <td><input class="editable-label" type="text" value="Подсветка и декор"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-row-btn" onclick="addRow('tbl-brand','brand')"><span class="plus">+</span> добавить позицию</button>
+    </div>
+
+    <!-- Административное -->
+    <div class="group">
+      <div class="group-title"><span>Административное и старт</span></div>
+      <table class="fm-table" id="tbl-adm">
+        <tbody>
+          <tr data-group="adm">
+            <td><input class="editable-label" type="text" value="Онлайн-касса"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="adm">
+            <td><input class="editable-label" type="text" value="Терминал эквайринга"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="adm">
+            <td><input class="editable-label" type="text" value="Инвентарь (темпер, питчеры и т.д.)"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="adm">
+            <td><input class="editable-label" type="text" value="Расходники на старт (зерно, стаканы)"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="adm">
+            <td><input class="editable-label" type="text" value="Регистрация ИП / прочее"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-row-btn" onclick="addRow('tbl-adm','adm')"><span class="plus">+</span> добавить позицию</button>
+    </div>
+
+    <!-- Аренда и оборотный капитал -->
+    <div class="group">
+      <div class="group-title"><span>Аренда и оборотный капитал</span></div>
+      <table class="fm-table" id="tbl-deposit">
+        <tbody>
+          <tr data-group="deposit">
+            <td><input class="editable-label" type="text" value="Депозит аренды (2–3 мес)"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="deposit">
+            <td><input class="editable-label" type="text" value="Оборотный капитал (буфер 2 мес)"></td>
+            <td class="input-cell"><input class="fm-input inv-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-row-btn" onclick="addRow('tbl-deposit','deposit')"><span class="plus">+</span> добавить позицию</button>
+    </div>
+
+    <div class="total-row">
+      <span class="total-label">Итого инвестиций</span>
+      <span class="total-value" id="invest-total">— ₸</span>
+    </div>
+  </div>
+
+  <!-- ===== 02 UNIT-ЭКОНОМИКА ===== -->
+  <div id="tab-unit" class="section">
+    <div class="section-header">
+      <div class="section-label">Раздел 02</div>
+      <div class="section-title">Unit-экономика на 1 чашку</div>
+    </div>
+
+    <div class="unit-grid">
+      <div class="unit-card">
+        <div class="unit-card-title">Выручка</div>
+        <table class="fm-table">
+          <tbody>
+            <tr>
+              <td>Средний чек</td>
+              <td class="input-cell"><input class="fm-input" type="number" id="avg-check" placeholder="0" oninput="calc()"></td>
+              <td class="unit-cell">₸</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="unit-card">
+        <div class="unit-card-title">Себестоимость 1 чашки</div>
+        <table class="fm-table" id="tbl-cogs">
+          <tbody>
+            <tr data-group="cogs">
+              <td><input class="editable-label" type="text" value="Кофе (зерно)"></td>
+              <td class="input-cell"><input class="fm-input cogs-input" type="number" placeholder="0" oninput="calc()"></td>
+              <td class="unit-cell">₸</td>
+              <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+            </tr>
+            <tr data-group="cogs">
+              <td><input class="editable-label" type="text" value="Молоко"></td>
+              <td class="input-cell"><input class="fm-input cogs-input" type="number" placeholder="0" oninput="calc()"></td>
+              <td class="unit-cell">₸</td>
+              <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+            </tr>
+            <tr data-group="cogs">
+              <td><input class="editable-label" type="text" value="Стакан + крышка"></td>
+              <td class="input-cell"><input class="fm-input cogs-input" type="number" placeholder="0" oninput="calc()"></td>
+              <td class="unit-cell">₸</td>
+              <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+            </tr>
+            <tr data-group="cogs">
+              <td><input class="editable-label" type="text" value="Сироп / добавки"></td>
+              <td class="input-cell"><input class="fm-input cogs-input" type="number" placeholder="0" oninput="calc()"></td>
+              <td class="unit-cell">₸</td>
+              <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="add-row-btn" onclick="addRow('tbl-cogs','cogs')"><span class="plus">+</span> добавить</button>
+      </div>
+    </div>
+
+    <div class="metrics" id="unit-metrics">
+      <div class="metric">
+        <div class="metric-label">Себестоимость / чашка</div>
+        <div class="metric-value" id="unit-cogs">— ₸</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Маржа / чашка</div>
+        <div class="metric-value green" id="unit-margin">— ₸</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Маржинальность</div>
+        <div class="metric-value" id="unit-margin-pct">— %</div>
+      </div>
+    </div>
+    <p class="note">Маржинальность = (чек − себестоимость) / чек × 100</p>
+  </div>
+
+  <!-- ===== 03 ОПЕРАЦИОНКА ===== -->
+  <div id="tab-ops" class="section">
+    <div class="section-header">
+      <div class="section-label">Раздел 03</div>
+      <div class="section-title">Операционные расходы / мес</div>
+    </div>
+
+    <!-- Постоянные -->
+    <div class="group">
+      <div class="group-title"><span>Постоянные расходы</span></div>
+      <table class="fm-table" id="tbl-fixed">
+        <tbody>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="Аренда точки"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="ЗП бариста"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="Социальные взносы с ЗП (~20%)"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="Зарплата себе (управляющий)"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="Амортизация оборудования"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="Коммунальные / интернет"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="Маркетинг / соцсети"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="fixed">
+            <td><input class="editable-label" type="text" value="Прочее (хоз., упаковка)"></td>
+            <td class="input-cell"><input class="fm-input fixed-input" type="number" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">₸/мес</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-row-btn" onclick="addRow('tbl-fixed','fixed')"><span class="plus">+</span> добавить статью</button>
+    </div>
+
+    <!-- Переменные -->
+    <div class="group">
+      <div class="group-title"><span>Переменные расходы (от выручки)</span></div>
+      <table class="fm-table" id="tbl-var">
+        <tbody>
+          <tr data-group="var">
+            <td><input class="editable-label" type="text" value="Эквайринг (% от выручки)"></td>
+            <td class="input-cell"><input class="fm-input var-input" type="number" placeholder="0" step="0.1" oninput="calc()"></td>
+            <td class="unit-cell">%</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+          <tr data-group="var">
+            <td><input class="editable-label" type="text" value="Налог ИП (упрощёнка)"></td>
+            <td class="input-cell"><input class="fm-input var-input" type="number" placeholder="0" step="0.1" oninput="calc()"></td>
+            <td class="unit-cell">%</td>
+            <td><button class="del-btn" onclick="delRow(this)">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-row-btn" onclick="addRow('tbl-var','var')"><span class="plus">+</span> добавить</button>
+    </div>
+
+    <!-- Продажи -->
+    <div class="group">
+      <div class="group-title"><span>Объём продаж (реалистичный сценарий)</span></div>
+      <table class="fm-table">
+        <tbody>
+          <tr>
+            <td>Чашек в день — пессимизм</td>
+            <td class="input-cell"><input class="fm-input" type="number" id="cups-low" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">шт</td>
+          </tr>
+          <tr>
+            <td>Чашек в день — реализм</td>
+            <td class="input-cell"><input class="fm-input" type="number" id="cups-mid" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">шт</td>
+          </tr>
+          <tr>
+            <td>Чашек в день — оптимизм</td>
+            <td class="input-cell"><input class="fm-input" type="number" id="cups-high" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">шт</td>
+          </tr>
+          <tr>
+            <td>Рабочих дней в месяц</td>
+            <td class="input-cell"><input class="fm-input" type="number" id="work-days" placeholder="0" oninput="calc()"></td>
+            <td class="unit-cell">дней</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Постоянные / мес</div>
+        <div class="metric-value" id="ops-fixed">— ₸</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Перем. % (от выр.)</div>
+        <div class="metric-value" id="ops-var-pct">— %</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Точка безубыточности</div>
+        <div class="metric-value" id="ops-bep">— шт/день</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 04 РАСКАТКА ===== -->
+  <div id="tab-ramp" class="section">
+    <div class="section-header">
+      <div class="section-label">Раздел 04</div>
+      <div class="section-title">Раскатка по месяцам</div>
+    </div>
+    <p style="color:var(--gray-600); margin-bottom:24px; font-size:13px;">Укажи % от реалистичного объёма продаж для каждого месяца. Первые месяцы — раскатка, потом выход на полную мощность.</p>
+
+    <table class="ramp-table">
+      <thead>
+        <tr>
+          <th style="width:60px">Месяц</th>
+          <th>Загрузка</th>
+          <th style="width:50px; text-align:right">%</th>
+        </tr>
+      </thead>
+      <tbody id="ramp-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ===== 05 P&L / ИТОГ ===== -->
+  <div id="tab-pl" class="section">
+    <div class="section-header">
+      <div class="section-label">Раздел 05</div>
+      <div class="section-title">P&L и итоги</div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Инвестиции</div>
+        <div class="metric-value" id="pl-invest">— ₸</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Прибыль/мес (реализм)</div>
+        <div class="metric-value" id="pl-profit">— ₸</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Окупаемость</div>
+        <div class="metric-value" id="pl-payback">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">ROI (год 1)</div>
+        <div class="metric-value" id="pl-roi">— %</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Точка безубыточности</div>
+        <div class="metric-value" id="pl-bep2">— шт/день</div>
+      </div>
+    </div>
+
+    <!-- Сценарная таблица -->
+    <div class="chart-container">
+      <div class="chart-title">Сравнение сценариев — выручка и прибыль / мес</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#0f0f0f"></div>Выручка</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a0a0a0"></div>Прибыль</div>
+      </div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="scenario-chart" role="img" aria-label="Сравнение выручки и прибыли по сценариям"></canvas>
+      </div>
+    </div>
+
+    <!-- Накопленная кривая -->
+    <div class="chart-container">
+      <div class="chart-title">Накопленный денежный поток — 12 месяцев (реализм)</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="cashflow-chart" role="img" aria-label="Накопленный денежный поток за 12 месяцев"></canvas>
+      </div>
+    </div>
+
+    <!-- P&L таблица -->
+    <div class="pl-table-wrap">
+      <table class="pl-table">
+        <thead>
+          <tr>
+            <th style="text-align:left; min-width:180px">Показатель</th>
+            <th>Пессимизм</th>
+            <th>Реализм</th>
+            <th>Оптимизм</th>
+          </tr>
+        </thead>
+        <tbody id="pl-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function fmtN(n) {
+  if (isNaN(n) || n === null) return '—';
+  return Math.round(n).toLocaleString('ru-RU');
+}
+function fmt(n) { return fmtN(n) + ' ₸'; }
+function fmtM(n) {
+  if (isNaN(n) || n === null) return '—';
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return (n < 0 ? '-' : '') + (abs/1000000).toFixed(1) + ' млн ₸';
+  if (abs >= 1000) return (n < 0 ? '-' : '') + (abs/1000).toFixed(0) + ' тыс ₸';
+  return Math.round(n) + ' ₸';
+}
+function v(id) { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
+function sumInputs(cls) {
+  return Array.from(document.querySelectorAll('.' + cls)).reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
+}
+
+// ── RAMP INIT ────────────────────────────────────────────────────────────────
+const defaultRamp = [40, 60, 80, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+function initRamp() {
+  const tbody = document.getElementById('ramp-body');
+  tbody.innerHTML = '';
+  for (let i = 0; i < 12; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--gray-400); font-size:11px;">М${i+1}</td>
+      <td><input type="range" min="0" max="150" step="5" value="${defaultRamp[i]}" oninput="updateRamp(this,${i})" style="width:100%"></td>
+      <td class="ramp-val" id="ramp-val-${i}">${defaultRamp[i]}%</td>`;
+    tbody.appendChild(tr);
+  }
+}
+function updateRamp(el, i) {
+  document.getElementById('ramp-val-' + i).textContent = el.value + '%';
+  calc();
+}
+function getRamp() {
+  return Array.from({length:12}, (_,i) => {
+    const el = document.querySelector(`#ramp-body tr:nth-child(${i+1}) input[type=range]`);
+    return el ? (parseFloat(el.value) / 100) : 1;
+  });
+}
+
+// ── ADD / DEL ROWS ───────────────────────────────────────────────────────────
+function addRow(tableId, group) {
+  const tbody = document.querySelector('#' + tableId + ' tbody');
+  const isPercent = group === 'var';
+  const isCogs = group === 'cogs';
+  const unit = isPercent ? '%' : '₸';
+  const cls = group === 'cogs' ? 'cogs-input' : group === 'fixed' ? 'fixed-input' : group === 'var' ? 'var-input' : 'inv-input';
+  const tr = document.createElement('tr');
+  tr.setAttribute('data-group', group);
+  tr.innerHTML = `
+    <td><input class="editable-label" type="text" placeholder="Новая позиция"></td>
+    <td class="input-cell"><input class="fm-input ${cls}" type="number" placeholder="0" ${isPercent ? 'step="0.1"' : ''} oninput="calc()"></td>
+    <td class="unit-cell">${unit}</td>
+    <td><button class="del-btn" onclick="delRow(this)">×</button></td>`;
+  tbody.appendChild(tr);
+}
+function delRow(btn) {
+  btn.closest('tr').remove();
+  calc();
+}
+
+// ── CHARTS ───────────────────────────────────────────────────────────────────
+let scenarioChart, cashflowChart;
+function renderCharts(data) {
+  const { revL, revM, revH, profitL, profitM, profitH, invest, ramp } = data;
+
+  // Scenario bar chart
+  const sc = document.getElementById('scenario-chart');
+  if (sc) {
+    if (scenarioChart) scenarioChart.destroy();
+    scenarioChart = new Chart(sc, {
+      type: 'bar',
+      data: {
+        labels: ['Пессимизм', 'Реализм', 'Оптимизм'],
+        datasets: [
+          { label: 'Выручка', data: [Math.round(revL), Math.round(revM), Math.round(revH)], backgroundColor: '#0f0f0f' },
+          { label: 'Прибыль', data: [Math.round(profitL), Math.round(profitM), Math.round(profitH)], backgroundColor: '#a0a0a0' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { ticks: { callback: v => fmtM(v), font: { size: 11 } }, grid: { color: '#e8e8e8' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+
+  // Cashflow line chart
+  const cf = document.getElementById('cashflow-chart');
+  if (cf) {
+    if (cashflowChart) cashflowChart.destroy();
+    const months = Array.from({length:12}, (_,i) => 'М'+(i+1));
+    let cum = -invest;
+    const cumData = ramp.map(r => {
+      cum += profitM * r;
+      return Math.round(cum);
+    });
+    cashflowChart = new Chart(cf, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Накопленный CF',
+          data: cumData,
+          borderColor: '#0f0f0f',
+          backgroundColor: 'rgba(15,15,15,0.04)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointBackgroundColor: cumData.map(v => v >= 0 ? '#2d6a4f' : '#9b2226'),
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { callback: v => fmtM(v), font: { size: 11 } }, grid: { color: '#e8e8e8' } },
+          x: { ticks: { autoSkip: false, font: { size: 11 } }, grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+// ── MAIN CALC ────────────────────────────────────────────────────────────────
+function calc() {
+  // Investments
+  const invest = sumInputs('inv-input');
+  const el = document.getElementById('invest-total');
+  if (el) el.textContent = invest > 0 ? fmtM(invest) : '— ₸';
+
+  // Unit economics
+  const check = v('avg-check');
+  const cogsPer = sumInputs('cogs-input');
+  const margin = check - cogsPer;
+  const marginPct = check > 0 ? (margin / check * 100) : 0;
+  setEl('unit-cogs', fmt(cogsPer));
+  setEl('unit-margin', fmt(margin));
+  setEl('unit-margin-pct', marginPct.toFixed(1) + '%');
+
+  // Ops
+  const fixed = sumInputs('fixed-input');
+  const varPct = sumInputs('var-input') / 100;
+  const days = v('work-days');
+  const cupsL = v('cups-low'), cupsM = v('cups-mid'), cupsH = v('cups-high');
+
+  setEl('ops-fixed', fmt(fixed));
+  setEl('ops-var-pct', (varPct * 100).toFixed(1) + '%');
+
+  // BEP: fixed / (margin_per_cup - var_pct * check) / days
+  const marginAfterVar = margin - varPct * check;
+  const bep = marginAfterVar > 0 && days > 0 ? Math.ceil(fixed / (marginAfterVar * days)) : null;
+  setEl('ops-bep', bep !== null ? bep + ' шт/день' : '—');
+  setEl('pl-bep2', bep !== null ? bep + ' шт/день' : '—');
+
+  // Revenue & profit per scenario
+  function scenarioCalc(cups) {
+    const rev = cups * check * days;
+    const cogsTotal = cups * cogsPer * days;
+    const varCosts = rev * varPct;
+    const totalCosts = fixed + cogsTotal + varCosts;
+    const profit = rev - totalCosts;
+    return { rev, cogsTotal, varCosts, totalCosts, profit };
+  }
+  const low = scenarioCalc(cupsL);
+  const mid = scenarioCalc(cupsM);
+  const high = scenarioCalc(cupsH);
+
+  // P&L Summary metrics
+  setEl('pl-invest', fmtM(invest));
+  const profEl = document.getElementById('pl-profit');
+  if (profEl) {
+    profEl.textContent = mid.profit !== 0 ? fmtM(mid.profit) : '— ₸';
+    profEl.className = 'metric-value ' + (mid.profit > 0 ? 'green' : mid.profit < 0 ? 'red' : '');
+  }
+  const payback = invest > 0 && mid.profit > 0 ? Math.ceil(invest / mid.profit) : null;
+  setEl('pl-payback', payback ? payback + ' мес' : '—');
+  const ramp = getRamp();
+  const year1profit = ramp.reduce((s, r) => s + mid.profit * r, 0);
+  const roi = invest > 0 ? (year1profit / invest * 100) : null;
+  setEl('pl-roi', roi !== null ? roi.toFixed(0) + '%' : '—');
+
+  // P&L table
+  const tbody = document.getElementById('pl-tbody');
+  if (tbody) {
+    const rows = [
+      { label: 'Выручка', l: low.rev, m: mid.rev, h: high.rev, cls: 'pl-total' },
+      { label: 'Себестоимость (COGS)', l: -low.cogsTotal, m: -mid.cogsTotal, h: -high.cogsTotal },
+      { label: 'Валовая прибыль', l: low.rev-low.cogsTotal, m: mid.rev-mid.cogsTotal, h: high.rev-high.cogsTotal, cls: 'pl-total' },
+      { label: 'Постоянные расходы', l: -fixed, m: -fixed, h: -fixed },
+      { label: 'Переменные расходы', l: -low.varCosts, m: -mid.varCosts, h: -high.varCosts },
+      { label: 'EBITDA', l: low.profit, m: mid.profit, h: high.profit, cls: mid.profit >= 0 ? 'pl-profit pl-divider' : 'pl-loss pl-divider' },
+    ];
+    tbody.innerHTML = rows.map(r => `
+      <tr class="${r.cls || ''}">
+        <td>${r.label}</td>
+        <td>${r.l !== 0 || r.label === 'Постоянные расходы' ? fmtM(r.l) : '—'}</td>
+        <td>${r.m !== 0 || r.label === 'Постоянные расходы' ? fmtM(r.m) : '—'}</td>
+        <td>${r.h !== 0 || r.label === 'Постоянные расходы' ? fmtM(r.h) : '—'}</td>
+      </tr>`).join('');
+  }
+
+  // Charts
+  renderCharts({ revL: low.rev, revM: mid.rev, revH: high.rev, profitL: low.profit, profitM: mid.profit, profitH: high.profit, invest, ramp });
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.nav-item').forEach((btn, i) => {
+    const names = ['invest','unit','ops','ramp','pl'];
+    btn.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const sec = document.getElementById('tab-' + name);
+  if (sec) sec.classList.add('active');
+  if (name === 'pl') setTimeout(() => renderCharts(getChartData()), 50);
+}
+
+function getChartData() {
+  const check = v('avg-check');
+  const cogsPer = sumInputs('cogs-input');
+  const fixed = sumInputs('fixed-input');
+  const varPct = sumInputs('var-input') / 100;
+  const days = v('work-days');
+  function sc(cups) {
+    const rev = cups * check * days;
+    const cogsTotal = cups * cogsPer * days;
+    const varCosts = rev * varPct;
+    return { rev, profit: rev - cogsTotal - varCosts - fixed };
+  }
+  const low = sc(v('cups-low')), mid = sc(v('cups-mid')), high = sc(v('cups-high'));
+  return { revL:low.rev, revM:mid.rev, revH:high.rev, profitL:low.profit, profitM:mid.profit, profitH:high.profit, invest: sumInputs('inv-input'), ramp: getRamp() };
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+initRamp();
+calc();
+</script>
+</body>
+</html>
